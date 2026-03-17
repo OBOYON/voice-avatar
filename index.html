@@ -214,6 +214,43 @@ let chatHistory = []; // conversation history for LLM
 let pendingText = ''; // accumulate final texts before sending to LLM
 let pendingTimer = null;
 
+// ============================================================
+//  GLOBAL AudioContext for TTS (unlocked on first user tap)
+// ============================================================
+let globalAudioCtx = null;
+let audioUnlocked = false;
+
+function ensureAudioCtx() {
+  if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
+    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    dbg('Created global AudioContext');
+  }
+  if (globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume().then(() => dbg('AudioContext resumed'));
+  }
+  return globalAudioCtx;
+}
+
+// Unlock audio playback on first user interaction (iOS/Safari requirement)
+// Must be called from a trusted user event handler
+function unlockAudio() {
+  if (audioUnlocked) return;
+  const actx = ensureAudioCtx();
+  // Play a tiny silent buffer to unlock
+  const buf = actx.createBuffer(1, 1, actx.sampleRate);
+  const src = actx.createBufferSource();
+  src.buffer = buf;
+  src.connect(actx.destination);
+  src.start(0);
+  audioUnlocked = true;
+  dbg('Audio unlocked (silent buffer played)');
+}
+
+// Attach to all possible first-interaction events
+['touchstart', 'touchend', 'click', 'keydown'].forEach(evt => {
+  document.addEventListener(evt, unlockAudio, { once: false, passive: true });
+});
+
 // Canvas
 const ctx = waveCanvas.getContext('2d');
 function resizeCanvas() {
@@ -479,6 +516,8 @@ function toggleRecording() {
   if (tapLock) return;
   tapLock = true; setTimeout(() => { tapLock = false; }, 500);
   dbg(`toggle: isRecording=${isRecording}`);
+  // Unlock audio on every user tap
+  ensureAudioCtx();
   if (isRecording) stopRecording(); else startRecording();
 }
 let usedTouch = false;
@@ -589,70 +628,79 @@ async function sendToLLM(userText) {
 
 // ============================================================
 //  TEXT-TO-SPEECH (Edge-TTS via server)
+//  Uses Web Audio API decodeAudioData + BufferSource
+//  to avoid autoplay policy issues with <audio> elements.
 // ============================================================
-let ttsAudio = null;
-let talkFrame = null;
+let ttsSource = null;  // AudioBufferSourceNode
 let ttsAnalyser = null;
-let ttsAudioCtx = null;
+let talkFrame = null;
+let isSpeaking = false;
 
 async function speakText(text) {
   if (!text) return;
   dbg(`TTS: requesting "${text.slice(0, 40)}..."`);
 
-  // Stop any current playback
   stopSpeaking();
 
   try {
+    // 1. Fetch TTS audio from server
     const resp = await fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
     if (!resp.ok) throw new Error(`TTS HTTP ${resp.status}`);
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
+    const arrayBuf = await resp.arrayBuffer();
+    dbg(`TTS: received ${arrayBuf.byteLength} bytes`);
 
-    ttsAudio = new Audio(url);
+    // 2. Decode audio using global AudioContext (already unlocked by user tap)
+    const actx = ensureAudioCtx();
+    const audioBuffer = await actx.decodeAudioData(arrayBuf);
+    dbg(`TTS: decoded ${audioBuffer.duration.toFixed(1)}s audio`);
 
-    // Connect to analyser for mouth sync
-    ttsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = ttsAudioCtx.createMediaElementSource(ttsAudio);
-    ttsAnalyser = ttsAudioCtx.createAnalyser();
+    // 3. Create source + analyser
+    ttsSource = actx.createBufferSource();
+    ttsSource.buffer = audioBuffer;
+
+    ttsAnalyser = actx.createAnalyser();
     ttsAnalyser.fftSize = 256;
-    source.connect(ttsAnalyser);
-    ttsAnalyser.connect(ttsAudioCtx.destination);
 
-    ttsAudio.onplay = () => {
-      dbg('TTS playing');
-      setEmotion('happy');
-      glow.classList.add('active');
-      animateTalking();
-    };
-    ttsAudio.onended = () => {
-      dbg('TTS ended');
-      stopSpeaking();
-      URL.revokeObjectURL(url);
-    };
-    ttsAudio.onerror = (e) => {
-      dbg(`TTS audio error: ${e}`);
+    ttsSource.connect(ttsAnalyser);
+    ttsAnalyser.connect(actx.destination);
+
+    // 4. Start playing
+    isSpeaking = true;
+    ttsSource.onended = () => {
+      dbg('TTS: playback ended');
       stopSpeaking();
     };
 
-    await ttsAudio.play();
+    ttsSource.start(0);
+    dbg('TTS: playing via AudioBufferSourceNode');
+    setEmotion('happy');
+    glow.classList.add('active');
+    animateTalking();
+
   } catch(e) {
     dbg(`TTS error: ${e.message}`);
     // Fallback to browser TTS
-    if (window.speechSynthesis) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ja-JP'; utter.rate = 1.1;
-      speechSynthesis.speak(utter);
-    }
+    try {
+      if (window.speechSynthesis) {
+        speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'ja-JP'; utter.rate = 1.1;
+        utter.onstart = () => { setEmotion('happy'); glow.classList.add('active'); animateTalking(); };
+        utter.onend = () => stopSpeaking();
+        speechSynthesis.speak(utter);
+        dbg('TTS: using browser fallback');
+      }
+    } catch(e2) { dbg(`TTS fallback error: ${e2.message}`); }
   }
 }
 
 function stopSpeaking() {
-  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
-  if (ttsAudioCtx) { ttsAudioCtx.close().catch(()=>{}); ttsAudioCtx = null; }
+  isSpeaking = false;
+  if (ttsSource) { try { ttsSource.stop(); } catch(e) {} ttsSource = null; }
   ttsAnalyser = null;
   setEmotion('neutral');
   glow.classList.remove('active');
@@ -661,6 +709,7 @@ function stopSpeaking() {
 }
 
 function animateTalking() {
+  if (!isSpeaking) return;
   if (ttsAnalyser) {
     const data = new Uint8Array(ttsAnalyser.frequencyBinCount);
     ttsAnalyser.getByteFrequencyData(data);
@@ -670,8 +719,7 @@ function animateTalking() {
     const ry = Math.min(14, 3 + (avg / 255) * 28);
     mouth.setAttribute('ry', ry.toFixed(1));
   } else {
-    const ry = 3 + Math.random() * 11;
-    mouth.setAttribute('ry', ry.toFixed(1));
+    mouth.setAttribute('ry', (3 + Math.random() * 11).toFixed(1));
   }
   talkFrame = requestAnimationFrame(animateTalking);
 }
