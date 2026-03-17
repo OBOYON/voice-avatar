@@ -467,13 +467,22 @@ if (!SpeechRecognition) {
   };
 
   recognition.onend = () => {
+    console.log('recognition ended, isRecording=', isRecording);
     if (isRecording) {
-      // Restart after brief delay to avoid rapid-fire errors
+      // Restart after brief delay (iOS stops after each utterance)
       setTimeout(() => {
         if (isRecording) {
-          try { recognition.start(); } catch(e) { console.warn('restart failed', e); }
+          try {
+            recognition.start();
+            console.log('recognition restarted');
+          } catch(e) {
+            console.warn('restart failed, retry in 1s', e);
+            setTimeout(() => {
+              if (isRecording) try { recognition.start(); } catch(e2) {}
+            }, 1000);
+          }
         }
-      }, 300);
+      }, 250);
     }
   };
 
@@ -483,6 +492,15 @@ if (!SpeechRecognition) {
       recognition.stop(); // will auto-restart with new lang
     }
   });
+}
+
+// ─── iOS / mobile detection ───
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+if (isIOS && recognition) {
+  // iOS Safari doesn't support continuous well
+  recognition.continuous = false;
 }
 
 // ─── Recording controls ───
@@ -496,8 +514,7 @@ async function startRecording() {
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
 
-  try { recognition.start(); } catch(e) {}
-
+  // 1) Get mic stream FIRST for the audio visualizer
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -508,6 +525,13 @@ async function startRecording() {
     animate();
   } catch(e) {
     console.warn('Audio analyser failed', e);
+  }
+
+  // 2) Start speech recognition AFTER mic is acquired
+  try {
+    recognition.start();
+  } catch(e) {
+    console.warn('recognition.start failed', e);
   }
 }
 
