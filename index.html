@@ -466,8 +466,11 @@ function stopRecording() {
   if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
   if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  mouth.setAttribute('ry', '3'); glow.classList.remove('active');
-  setEmotion('neutral');
+  // Don't reset mouth/glow if AI is speaking
+  if (!isSpeaking) {
+    mouth.setAttribute('ry', '3'); glow.classList.remove('active');
+    setEmotion('neutral');
+  }
   const r = waveCanvas.parentElement.getBoundingClientRect();
   ctx.clearRect(0, 0, r.width, r.height);
 }
@@ -486,8 +489,7 @@ function animate() {
   let sum = 0;
   for (let i = 0; i < bufLen; i++) sum += freqData[i];
   const avg = sum / bufLen;
-  mouth.setAttribute('ry', Math.min(14, 3 + (avg / 255) * 30).toFixed(1));
-  glow.classList.toggle('active', avg > 15);
+  // Mouth & glow only animate during AI TTS playback (see animateTalking)
 
   const rect = waveCanvas.parentElement.getBoundingClientRect();
   const w = rect.width, h = rect.height;
