@@ -1,0 +1,4 @@
+vosk-model-*/
+*.zip
+test_ja.*
+__pycache__/
