@@ -652,7 +652,12 @@ async function sendToLLM(userText) {
 
     // Speak the response using browser TTS
     // Strip markdown and emoji from AI response
-    fullResponse = fullResponse.replace(/\*\*|__|~~|`/g, '').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
+    fullResponse = fullResponse
+      .replace(/\*\*|__|~~|`|#{1,6}\s?/g, '')  // strip markdown
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')  // strip emoji
+      .replace(/[a-zA-Z]{2,}/g, '')  // strip English words
+      .replace(/\s{2,}/g, ' ')  // collapse whitespace
+      .trim();
     txt.textContent = fullResponse;
     speakText(fullResponse);
 
