@@ -8,8 +8,8 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    color: #fff; min-height: 100vh;
+    background: linear-gradient(135deg, #fce4ec, #f3e5f5, #e8eaf6, #e0f7fa);
+    color: #5d4037; min-height: 100vh;
     display: flex; flex-direction: column; align-items: center;
     overflow-x: hidden;
   }
@@ -17,21 +17,22 @@
 
   .controls { display: flex; gap: 8px; margin: 12px 0 0; flex-wrap: wrap; justify-content: center; }
   .ctrl-btn {
-    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-    color: #fff; border-radius: 8px; padding: 6px 14px; font-size: 0.8rem;
+    background: rgba(255,255,255,0.7); border: 1px solid rgba(206,147,216,0.4);
+    color: #6a1b9a; border-radius: 20px; padding: 6px 14px; font-size: 0.8rem;
     cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+    box-shadow: 0 2px 8px rgba(206,147,216,0.2);
   }
-  .ctrl-btn:hover { background: rgba(255,255,255,0.2); }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.9); }
   select.ctrl-btn {
     appearance: none; padding-right: 24px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236a1b9a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 8px center;
   }
 
   .avatar-wrap { margin: 20px 0 10px; position: relative; width: 200px; height: 200px; }
   .avatar-glow {
     position: absolute; inset: -20px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(100,180,255,0.3) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,183,197,0.5) 0%, transparent 70%);
     opacity: 0; transition: opacity 0.3s;
   }
   .avatar-glow.active { opacity: 1; }
@@ -43,39 +44,40 @@
   .mic-row { display: flex; align-items: center; gap: 18px; margin: 8px 0; }
   .mic-btn {
     width: 64px; height: 64px; border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+    border: 3px solid rgba(206,147,216,0.5); background: rgba(255,255,255,0.6);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: all 0.3s; -webkit-tap-highlight-color: transparent;
     touch-action: manipulation; user-select: none;
   }
-  .mic-btn:hover { background: rgba(255,255,255,0.15); }
+  .mic-btn:hover { background: rgba(255,255,255,0.85); }
   .mic-btn:active { transform: scale(0.92); }
-  .mic-btn.recording { border-color: #ff4757; background: rgba(255,71,87,0.2); animation: pulse 1.5s infinite; }
-  .mic-btn svg { width: 28px; height: 28px; fill: #fff; }
-  .mic-btn.recording svg { fill: #ff4757; }
+  .mic-btn.recording { border-color: #f48fb1; background: rgba(244,143,177,0.25); animation: pulse 1.5s infinite; }
+  .mic-btn svg { width: 28px; height: 28px; fill: #ab47bc; }
+  .mic-btn.recording svg { fill: #e91e63; }
   @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,71,87,0.4); }
-    50% { box-shadow: 0 0 0 16px rgba(255,71,87,0); }
+    0%,100% { box-shadow: 0 0 0 0 rgba(244,143,177,0.5); }
+    50% { box-shadow: 0 0 0 16px rgba(244,143,177,0); }
   }
 
   .duration { font-size: 1.1rem; font-variant-numeric: tabular-nums; opacity: 0.7; min-width: 60px; text-align: center; }
   .mic-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; margin-top: 4px; opacity: 0.5; transition: all 0.3s; }
-  .mic-label.on { color: #ff4757; opacity: 0.9; }
+  .mic-label.on { color: #e91e63; opacity: 0.9; }
   .status { font-size: 0.8rem; opacity: 0.55; margin-bottom: 8px; min-height: 1.2em; }
 
   .transcript-box {
-    width: min(90vw, 660px); flex: 1; background: rgba(255,255,255,0.06);
-    border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;
-    overflow-y: auto; max-height: 35vh; backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.08);
+    width: min(90vw, 660px); flex: 1; background: rgba(255,255,255,0.65);
+    border-radius: 20px; padding: 16px 20px; margin-bottom: 24px;
+    overflow-y: auto; max-height: 35vh; backdrop-filter: blur(10px);
+    border: 1px solid rgba(206,147,216,0.25);
+    box-shadow: 0 4px 20px rgba(206,147,216,0.15);
   }
   .transcript-box .entry { margin-bottom: 8px; line-height: 1.65; font-size: 0.95rem; display: flex; gap: 10px; }
   .entry .ts { flex-shrink: 0; font-size: 0.75rem; opacity: 0.4; padding-top: 2px; min-width: 52px; }
   .entry .text { flex: 1; }
   .entry.interim .text { opacity: 0.4; font-style: italic; }
   .transcript-box:empty::after { content: 'マイクボタンを押して話しかけてください 🎤'; opacity: 0.35; }
-  .entry.ai .text { color: #74b9ff; }
-  .entry.ai .ts { color: #74b9ff; }
+  .entry.ai .text { color: #7b1fa2; }
+  .entry.ai .ts { color: #7b1fa2; }
   .entry.ai-label { font-size: 0.7rem; opacity: 0.4; margin: 4px 0 2px 62px; }
   .ai-thinking { font-size: 0.85rem; opacity: 0.5; margin: 4px 0 2px 62px; }
   .ai-thinking::after { content: ''; animation: dots 1.5s infinite; }
@@ -83,21 +85,21 @@
 
   .action-bar { display: flex; gap: 8px; margin-bottom: 24px; }
   .error-msg {
-    background: rgba(255,71,87,0.15); border: 1px solid rgba(255,71,87,0.3);
+    background: rgba(244,143,177,0.2); border: 1px solid rgba(244,143,177,0.4);
     border-radius: 10px; padding: 10px 18px; margin: 6px; max-width: 90vw;
     display: none; font-size: 0.9rem;
   }
   .error-msg.show { display: block; }
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: rgba(108,92,231,0.9); padding: 10px 24px; border-radius: 10px;
+    background: rgba(171,71,188,0.9); padding: 10px 24px; border-radius: 20px;
     font-size: 0.85rem; pointer-events: none; opacity: 0; transition: all 0.35s; z-index: 100;
   }
   .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   .debug-log {
     position: fixed; bottom: 0; left: 0; right: 0; max-height: 120px;
-    overflow-y: auto; background: rgba(0,0,0,0.85); font-size: 0.65rem;
-    font-family: monospace; padding: 6px 10px; color: #0f0;
+    overflow-y: auto; background: rgba(49,27,56,0.9); font-size: 0.65rem;
+    font-family: monospace; padding: 6px 10px; color: #ce93d8;
     display: none; z-index: 200;
   }
   .debug-log.show { display: block; }
@@ -108,7 +110,7 @@
 </head>
 <body>
 
-<h1>🎙️ 音声認識アバター</h1>
+<h1>🐹 ハムスターAI</h1>
 
 <div class="controls">
   <select class="ctrl-btn" id="langSel">
@@ -121,22 +123,51 @@
 <div class="avatar-wrap">
   <div class="avatar-glow" id="glow"></div>
   <svg class="avatar-svg" viewBox="0 0 220 220">
-    <circle cx="110" cy="110" r="90" fill="#6c5ce7" />
-    <circle cx="110" cy="110" r="85" fill="#a29bfe" />
-    <ellipse cx="110" cy="55" rx="75" ry="35" fill="#2d3436" />
-    <ellipse cx="55" cy="80" rx="18" ry="30" fill="#2d3436" />
-    <ellipse cx="165" cy="80" rx="18" ry="30" fill="#2d3436" />
-    <ellipse cx="110" cy="120" rx="65" ry="60" fill="#ffeaa7" />
-    <g class="eye"><ellipse cx="85" cy="110" rx="10" ry="11" fill="#fff"/><circle cx="85" cy="110" r="5" fill="#2d3436"/><circle cx="87" cy="108" r="2" fill="#fff"/></g>
-    <g class="eye"><ellipse cx="135" cy="110" rx="10" ry="11" fill="#fff"/><circle cx="135" cy="110" r="5" fill="#2d3436"/><circle cx="137" cy="108" r="2" fill="#fff"/></g>
-    <path class="brow" id="browL" d="M70 95 Q85 88 100 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path class="brow" id="browR" d="M120 95 Q135 88 150 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <ellipse cx="110" cy="125" rx="3" ry="4" fill="#f0d48a" />
-    <ellipse id="cheekL" cx="70" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
-    <ellipse id="cheekR" cx="150" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
-    <ellipse id="mouth" cx="110" cy="145" rx="12" ry="3" fill="#e17055" />
-    <path id="smileL" d="M92 148 Q88 155 82 152" stroke="#e17055" stroke-width="1.5" fill="none" opacity="0"/>
-    <path id="smileR" d="M128 148 Q132 155 138 152" stroke="#e17055" stroke-width="1.5" fill="none" opacity="0"/>
+    <!-- Ears (big round hamster ears) -->
+    <ellipse cx="60" cy="52" rx="32" ry="38" fill="#f8bbd0" stroke="#e48aaa" stroke-width="1.5"/>
+    <ellipse cx="60" cy="52" rx="20" ry="26" fill="#fce4ec"/>
+    <ellipse cx="160" cy="52" rx="32" ry="38" fill="#f8bbd0" stroke="#e48aaa" stroke-width="1.5"/>
+    <ellipse cx="160" cy="52" rx="20" ry="26" fill="#fce4ec"/>
+    <!-- Body / head (chubby round) -->
+    <ellipse cx="110" cy="125" rx="85" ry="80" fill="#ffe0b2"/>
+    <ellipse cx="110" cy="125" rx="82" ry="77" fill="#fff3e0"/>
+    <!-- Belly -->
+    <ellipse cx="110" cy="145" rx="50" ry="42" fill="#fffde7"/>
+    <!-- Cheeks (big puffy hamster cheeks) -->
+    <ellipse id="cheekL" cx="58" cy="132" rx="22" ry="18" fill="rgba(255,138,128,0.35)"/>
+    <ellipse id="cheekR" cx="162" cy="132" rx="22" ry="18" fill="rgba(255,138,128,0.35)"/>
+    <!-- Eyes (big cute round eyes) -->
+    <g class="eye">
+      <ellipse cx="82" cy="112" rx="14" ry="15" fill="#2d2d2d"/>
+      <ellipse cx="82" cy="112" rx="12" ry="13" fill="#3e2723"/>
+      <circle cx="78" cy="106" r="5" fill="#fff" opacity="0.9"/>
+      <circle cx="86" cy="110" r="2.5" fill="#fff" opacity="0.6"/>
+    </g>
+    <g class="eye">
+      <ellipse cx="138" cy="112" rx="14" ry="15" fill="#2d2d2d"/>
+      <ellipse cx="138" cy="112" rx="12" ry="13" fill="#3e2723"/>
+      <circle cx="134" cy="106" r="5" fill="#fff" opacity="0.9"/>
+      <circle cx="142" cy="110" r="2.5" fill="#fff" opacity="0.6"/>
+    </g>
+    <!-- Eyebrows (tiny cute ones) -->
+    <path class="brow" id="browL" d="M70 96 Q82 91 92 96" stroke="#8d6e63" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path class="brow" id="browR" d="M128 96 Q138 91 150 96" stroke="#8d6e63" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- Nose (tiny pink triangle) -->
+    <ellipse cx="110" cy="128" rx="5" ry="3.5" fill="#f48fb1"/>
+    <!-- Whiskers -->
+    <line x1="50" y1="125" x2="80" y2="128" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <line x1="48" y1="132" x2="78" y2="133" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <line x1="52" y1="139" x2="80" y2="138" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <line x1="170" y1="125" x2="140" y2="128" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <line x1="172" y1="132" x2="142" y2="133" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <line x1="168" y1="139" x2="140" y2="138" stroke="#bcaaa4" stroke-width="1" stroke-linecap="round"/>
+    <!-- Mouth -->
+    <ellipse id="mouth" cx="110" cy="140" rx="8" ry="2.5" fill="#e57373"/>
+    <path id="smileL" d="M100 142 Q96 149 90 146" stroke="#e57373" stroke-width="1.2" fill="none" opacity="0"/>
+    <path id="smileR" d="M120 142 Q124 149 130 146" stroke="#e57373" stroke-width="1.2" fill="none" opacity="0"/>
+    <!-- Tiny paws -->
+    <ellipse cx="75" cy="190" rx="14" ry="8" fill="#ffe0b2" stroke="#e48aaa" stroke-width="1"/>
+    <ellipse cx="145" cy="190" rx="14" ry="8" fill="#ffe0b2" stroke="#e48aaa" stroke-width="1"/>
   </svg>
 </div>
 
@@ -276,9 +307,9 @@ let currentEmotion = 'neutral';
 function setEmotion(em) {
   if (em === currentEmotion) return; currentEmotion = em;
   const cfg = {
-    happy:     { smile:'1', cheek:'rgba(255,118,117,0.55)', bL:'M70 97 Q85 90 100 97', bR:'M120 97 Q135 90 150 97' },
-    surprised: { smile:'0', cheek:'rgba(255,118,117,0.35)', bL:'M70 90 Q85 80 100 90', bR:'M120 90 Q135 80 150 90' },
-    neutral:   { smile:'0', cheek:'rgba(255,118,117,0.35)', bL:'M70 95 Q85 88 100 95', bR:'M120 95 Q135 88 150 95' },
+    happy:     { smile:'1', cheek:'rgba(255,138,128,0.55)', bL:'M70 98 Q82 93 92 98', bR:'M128 98 Q138 93 150 98' },
+    surprised: { smile:'0', cheek:'rgba(255,138,128,0.35)', bL:'M70 92 Q82 85 92 92', bR:'M128 92 Q138 85 150 92' },
+    neutral:   { smile:'0', cheek:'rgba(255,138,128,0.35)', bL:'M70 96 Q82 91 92 96', bR:'M128 96 Q138 91 150 96' },
   }[em];
   smileL.setAttribute('opacity',cfg.smile); smileR.setAttribute('opacity',cfg.smile);
   cheekL.setAttribute('fill',cfg.cheek);     cheekR.setAttribute('fill',cfg.cheek);
@@ -499,10 +530,10 @@ function animate() {
   const barCount = 48, barW = w / barCount - 2, step = Math.floor(bufLen / barCount);
   for (let i = 0; i < barCount; i++) {
     const val = freqData[i * step] / 255, barH = val * h * 0.85;
-    ctx.fillStyle = `hsla(${240 + val*80}, 80%, 65%, ${0.4 + val*0.5})`;
+    ctx.fillStyle = `hsla(${300 + val*40}, 70%, 75%, ${0.4 + val*0.5})`;
     ctx.beginPath(); ctx.roundRect(i*(barW+2)+1, h-barH, barW, barH, 3); ctx.fill();
   }
-  ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.strokeStyle = 'rgba(171,71,188,0.3)'; ctx.lineWidth = 1.5;
   const sliceW = w / bufLen;
   for (let i = 0; i < bufLen; i++) {
     const y = (timeData[i]/128.0*h)/2;
