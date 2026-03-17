@@ -9,14 +9,11 @@
   body {
     font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    color: #fff; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
     overflow-x: hidden;
   }
-  h1 { margin-top: 20px; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.05em; opacity: 0.9; }
+  h1 { margin-top: 20px; font-size: 1.4rem; font-weight: 600; opacity: 0.9; }
 
   .controls { display: flex; gap: 8px; margin: 12px 0 0; flex-wrap: wrap; justify-content: center; }
   .ctrl-btn {
@@ -73,7 +70,7 @@
     border: 1px solid rgba(255,255,255,0.08);
   }
   .transcript-box .entry { margin-bottom: 8px; line-height: 1.65; font-size: 0.95rem; display: flex; gap: 10px; }
-  .entry .ts { flex-shrink: 0; font-size: 0.75rem; opacity: 0.4; padding-top: 2px; font-variant-numeric: tabular-nums; min-width: 52px; }
+  .entry .ts { flex-shrink: 0; font-size: 0.75rem; opacity: 0.4; padding-top: 2px; min-width: 52px; }
   .entry .text { flex: 1; }
   .entry.interim .text { opacity: 0.4; font-style: italic; }
   .transcript-box:empty::after { content: 'マイクボタンを押して話しかけてください 🎤'; opacity: 0.35; }
@@ -85,15 +82,12 @@
     display: none; font-size: 0.9rem;
   }
   .error-msg.show { display: block; }
-
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
     background: rgba(108,92,231,0.9); padding: 10px 24px; border-radius: 10px;
     font-size: 0.85rem; pointer-events: none; opacity: 0; transition: all 0.35s; z-index: 100;
   }
   .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-  /* Debug log */
   .debug-log {
     position: fixed; bottom: 0; left: 0; right: 0; max-height: 120px;
     overflow-y: auto; background: rgba(0,0,0,0.85); font-size: 0.65rem;
@@ -101,7 +95,6 @@
     display: none; z-index: 200;
   }
   .debug-log.show { display: block; }
-
   @keyframes blink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
   .eye { animation: blink 4s infinite; transform-origin: center; }
   .brow { transition: d 0.3s, transform 0.3s; }
@@ -114,11 +107,6 @@
 <div class="controls">
   <select class="ctrl-btn" id="langSel">
     <option value="ja-JP">🇯🇵 日本語</option>
-    <option value="en-US">🇺🇸 English</option>
-    <option value="zh-CN">🇨🇳 中文</option>
-    <option value="ko-KR">🇰🇷 한국어</option>
-    <option value="es-ES">🇪🇸 Español</option>
-    <option value="fr-FR">🇫🇷 Français</option>
   </select>
   <button class="ctrl-btn" id="debugToggle">🐛 Debug</button>
 </div>
@@ -149,7 +137,7 @@
 
 <div class="mic-row">
   <span class="duration" id="duration">0:00</span>
-  <button class="mic-btn" id="micBtn" title="録音開始 / 停止">
+  <button class="mic-btn" id="micBtn">
     <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
   </button>
   <span class="duration" id="wordCount">0 文字</span>
@@ -169,20 +157,16 @@
 
 <script>
 // ============================================================
-//  DEBUG LOGGER
+//  DEBUG
 // ============================================================
 const debugLog = document.getElementById('debugLog');
 function dbg(msg) {
-  const t = new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit',fractionalSecondDigits:1});
-  const line = document.createElement('div');
-  line.textContent = `[${t}] ${msg}`;
-  debugLog.appendChild(line);
-  debugLog.scrollTop = debugLog.scrollHeight;
+  const t = new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line = document.createElement('div'); line.textContent = `[${t}] ${msg}`;
+  debugLog.appendChild(line); debugLog.scrollTop = debugLog.scrollHeight;
   console.log('[DBG]', msg);
 }
-document.getElementById('debugToggle').addEventListener('click', () => {
-  debugLog.classList.toggle('show');
-});
+document.getElementById('debugToggle').addEventListener('click', () => debugLog.classList.toggle('show'));
 
 // ============================================================
 //  ELEMENTS
@@ -193,17 +177,13 @@ const transcript  = document.getElementById('transcript');
 const errorMsg    = document.getElementById('errorMsg');
 const mouth       = document.getElementById('mouth');
 const glow        = document.getElementById('glow');
-const langSel     = document.getElementById('langSel');
 const durationEl  = document.getElementById('duration');
 const wordCountEl = document.getElementById('wordCount');
 const waveCanvas  = document.getElementById('waveCanvas');
 const toastEl     = document.getElementById('toast');
-const smileL      = document.getElementById('smileL');
-const smileR      = document.getElementById('smileR');
-const cheekL      = document.getElementById('cheekL');
-const cheekR      = document.getElementById('cheekR');
-const browL       = document.getElementById('browL');
-const browR       = document.getElementById('browR');
+const smileL = document.getElementById('smileL'), smileR = document.getElementById('smileR');
+const cheekL = document.getElementById('cheekL'), cheekR = document.getElementById('cheekR');
+const browL  = document.getElementById('browL'),  browR  = document.getElementById('browR');
 
 // ============================================================
 //  STATE
@@ -211,18 +191,18 @@ const browR       = document.getElementById('browR');
 let isRecording = false;
 let audioCtx = null, analyser = null, micStream = null, animFrame = null;
 let startTime = 0, timerInterval = null, totalChars = 0;
-let recognitionRunning = false; // tracks actual recognition state
+let ws = null; // WebSocket to Vosk server
+let scriptNode = null; // AudioWorklet / ScriptProcessor for sending audio
 
 // Canvas
 const ctx = waveCanvas.getContext('2d');
 function resizeCanvas() {
   const r = waveCanvas.parentElement.getBoundingClientRect();
-  waveCanvas.width  = r.width  * devicePixelRatio;
+  waveCanvas.width = r.width * devicePixelRatio;
   waveCanvas.height = r.height * devicePixelRatio;
   ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
 
 function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(() => toastEl.classList.remove('show'), 2000); }
 function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('show'); }
@@ -237,134 +217,46 @@ function updateTimer() {
 // ============================================================
 let currentEmotion = 'neutral';
 function setEmotion(em) {
-  if (em === currentEmotion) return;
-  currentEmotion = em;
+  if (em === currentEmotion) return; currentEmotion = em;
   const cfg = {
-    happy:     { smile: '1', cheek: 'rgba(255,118,117,0.55)', browL: 'M70 97 Q85 90 100 97', browR: 'M120 97 Q135 90 150 97' },
-    surprised: { smile: '0', cheek: 'rgba(255,118,117,0.35)', browL: 'M70 90 Q85 80 100 90', browR: 'M120 90 Q135 80 150 90' },
-    neutral:   { smile: '0', cheek: 'rgba(255,118,117,0.35)', browL: 'M70 95 Q85 88 100 95', browR: 'M120 95 Q135 88 150 95' },
-  }[em] || {};
-  smileL.setAttribute('opacity', cfg.smile); smileR.setAttribute('opacity', cfg.smile);
-  cheekL.setAttribute('fill', cfg.cheek); cheekR.setAttribute('fill', cfg.cheek);
-  browL.setAttribute('d', cfg.browL); browR.setAttribute('d', cfg.browR);
+    happy:     { smile:'1', cheek:'rgba(255,118,117,0.55)', bL:'M70 97 Q85 90 100 97', bR:'M120 97 Q135 90 150 97' },
+    surprised: { smile:'0', cheek:'rgba(255,118,117,0.35)', bL:'M70 90 Q85 80 100 90', bR:'M120 90 Q135 80 150 90' },
+    neutral:   { smile:'0', cheek:'rgba(255,118,117,0.35)', bL:'M70 95 Q85 88 100 95', bR:'M120 95 Q135 88 150 95' },
+  }[em];
+  smileL.setAttribute('opacity',cfg.smile); smileR.setAttribute('opacity',cfg.smile);
+  cheekL.setAttribute('fill',cfg.cheek);     cheekR.setAttribute('fill',cfg.cheek);
+  browL.setAttribute('d',cfg.bL);            browR.setAttribute('d',cfg.bR);
 }
 function detectEmotion(text) {
-  if (/[！!]{2}|すご|びっくり|えっ|マジ|ほんと|wow|amazing|what/i.test(text)) return 'surprised';
-  if (/[笑wW]|ありがと|嬉し|楽し|おもしろ|happy|thank|great|nice|haha|good/i.test(text)) return 'happy';
+  if (/[！!]{2}|すご|びっくり|えっ|マジ|wow|amazing/i.test(text)) return 'surprised';
+  if (/[笑wW]|ありがと|嬉し|楽し|おもしろ|happy|thank|great/i.test(text)) return 'happy';
   return 'neutral';
 }
 
 // ============================================================
-//  SPEECH RECOGNITION SETUP
+//  WebSocket URL
 // ============================================================
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition = null;
-
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-dbg(`SpeechRecognition API: ${!!SpeechRecognition}, iOS: ${isIOS}`);
-
-if (!SpeechRecognition) {
-  showError('このブラウザは Web Speech API に対応していません。Chrome / Edge をお使いください。');
-  micBtn.disabled = true;
+function getWsUrl() {
+  const loc = window.location;
+  const proto = loc.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${loc.host}/ws`;
 }
 
-function createRecognition() {
-  if (!SpeechRecognition) return null;
-  const r = new SpeechRecognition();
-  r.lang = langSel.value;
-  r.continuous = !isIOS; // iOS: single-shot, then restart
-  r.interimResults = true;
-  r.maxAlternatives = 1;
-
-  r.onstart = () => {
-    recognitionRunning = true;
-    dbg('recognition.onstart');
-  };
-
-  r.onaudiostart = () => dbg('recognition.onaudiostart');
-  r.onsoundstart = () => dbg('recognition.onsoundstart');
-  r.onspeechstart = () => dbg('recognition.onspeechstart');
-
-  r.onresult = (e) => {
-    dbg(`onresult: ${e.results.length} results, resultIndex=${e.resultIndex}`);
-    document.querySelectorAll('.interim').forEach(el => el.remove());
-
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const result = e.results[i];
-      const div = document.createElement('div');
-      div.className = 'entry';
-      const ts = document.createElement('span'); ts.className = 'ts'; ts.textContent = timeNow();
-      const txt = document.createElement('span'); txt.className = 'text'; txt.textContent = result[0].transcript;
-      div.appendChild(ts); div.appendChild(txt);
-
-      if (result.isFinal) {
-        dbg(`FINAL: "${result[0].transcript}"`);
-        totalChars += result[0].transcript.length;
-        wordCountEl.textContent = `${totalChars} 文字`;
-        setEmotion(detectEmotion(result[0].transcript));
-        setTimeout(() => setEmotion('neutral'), 3000);
-      } else {
-        div.classList.add('interim');
-        dbg(`interim: "${result[0].transcript}"`);
-      }
-      transcript.appendChild(div);
-    }
-    transcript.scrollTop = transcript.scrollHeight;
-  };
-
-  r.onerror = (e) => {
-    dbg(`recognition.onerror: ${e.error} (message: ${e.message})`);
-    recognitionRunning = false;
-    if (e.error === 'not-allowed') {
-      showError('マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください。');
-      stopRecording();
-    }
-    // other errors: let onend handle restart
-  };
-
-  r.onend = () => {
-    recognitionRunning = false;
-    dbg(`recognition.onend (isRecording=${isRecording})`);
-    if (isRecording) {
-      if (isIOS) {
-        // iOS: cannot auto-restart without user gesture.
-        // Show a prompt so user knows to tap again.
-        dbg('iOS: recognition ended, need user tap to restart');
-        statusEl.textContent = '🔄 タップで再開';
-        // Keep isRecording true so next tap calls stop then start
-      } else {
-        // Desktop Chrome/Edge: auto-restart works fine
-        setTimeout(() => {
-          if (!isRecording) return;
-          dbg('restarting recognition...');
-          recognition = createRecognition();
-          try {
-            recognition.start();
-          } catch(err) {
-            dbg(`restart failed: ${err.message}`);
-          }
-        }, 300);
-      }
-    }
-  };
-
-  return r;
-}
-
-langSel.addEventListener('change', () => {
-  dbg(`lang changed: ${langSel.value}`);
-  if (isRecording && recognition) {
-    try { recognition.abort(); } catch(e) {}
-    // onend will recreate with new lang
+// ============================================================
+//  Float32 to Int16 PCM conversion
+// ============================================================
+function float32ToInt16(float32Array) {
+  const int16 = new Int16Array(float32Array.length);
+  for (let i = 0; i < float32Array.length; i++) {
+    let s = Math.max(-1, Math.min(1, float32Array[i]));
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
   }
-});
+  return int16;
+}
 
 // ============================================================
-//  START / STOP
+//  START
 // ============================================================
-// MUST be synchronous — iOS Safari requires recognition.start()
-// to be called directly in the user-gesture callstack.
-// If this is async, iOS treats it as non-user-initiated and blocks it.
 function startRecording() {
   if (isRecording) return;
   isRecording = true;
@@ -377,34 +269,112 @@ function startRecording() {
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
 
-  // 1) Start speech recognition SYNCHRONOUSLY in user gesture callstack
-  recognition = createRecognition();
-  try {
-    recognition.start();
-    dbg('recognition.start() called (sync in gesture)');
-  } catch(e) {
-    dbg(`recognition.start() error: ${e.message}`);
-  }
+  // Connect WebSocket
+  const wsUrl = getWsUrl();
+  dbg(`Connecting WS: ${wsUrl}`);
+  ws = new WebSocket(wsUrl);
+  ws.binaryType = 'arraybuffer';
 
-  // 2) Visualizer runs async separately — does NOT affect recognition
-  startVisualizer();
+  ws.onopen = () => {
+    dbg('WS connected');
+    startMic();
+  };
+  ws.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    dbg(`WS msg: ${data.type} "${data.text}"`);
+    handleResult(data);
+  };
+  ws.onerror = (e) => {
+    dbg(`WS error: ${e}`);
+    showError('WebSocket接続エラー');
+  };
+  ws.onclose = () => {
+    dbg('WS closed');
+  };
 }
 
-async function startVisualizer() {
+async function startMic() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     const source = audioCtx.createMediaStreamSource(micStream);
+
+    // Analyser for visualizer
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
     source.connect(analyser);
+
+    // ScriptProcessor to capture raw audio and send to WS
+    // (AudioWorklet would be better but ScriptProcessor is simpler & widely supported)
+    const bufferSize = 4096;
+    scriptNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+    scriptNode.onaudioprocess = (e) => {
+      if (!isRecording || !ws || ws.readyState !== WebSocket.OPEN) return;
+      const float32 = e.inputBuffer.getChannelData(0);
+      // Resample if needed (audioCtx might not be 16000)
+      let pcmData;
+      if (audioCtx.sampleRate !== 16000) {
+        pcmData = resample(float32, audioCtx.sampleRate, 16000);
+      } else {
+        pcmData = float32ToInt16(float32);
+      }
+      ws.send(pcmData.buffer);
+    };
+    source.connect(scriptNode);
+    scriptNode.connect(audioCtx.destination); // Required for scriptProcessor to work
+
     animate();
-    dbg('visualizer started');
+    dbg(`Mic started (sampleRate=${audioCtx.sampleRate})`);
   } catch(e) {
-    dbg(`visualizer failed (ok, recognition still works): ${e.message}`);
+    dbg(`Mic error: ${e.message}`);
+    showError(`マイクエラー: ${e.message}`);
+    stopRecording();
   }
 }
 
+// Simple linear resampling
+function resample(float32, fromRate, toRate) {
+  const ratio = fromRate / toRate;
+  const newLength = Math.round(float32.length / ratio);
+  const result = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const idx = i * ratio;
+    const low = Math.floor(idx);
+    const high = Math.min(low + 1, float32.length - 1);
+    const frac = idx - low;
+    result[i] = float32[low] * (1 - frac) + float32[high] * frac;
+  }
+  return float32ToInt16(result);
+}
+
+// ============================================================
+//  HANDLE RECOGNITION RESULT
+// ============================================================
+function handleResult(data) {
+  // Remove old interim
+  document.querySelectorAll('.interim').forEach(el => el.remove());
+
+  const div = document.createElement('div');
+  div.className = 'entry';
+  const ts = document.createElement('span'); ts.className = 'ts'; ts.textContent = timeNow();
+  const txt = document.createElement('span'); txt.className = 'text'; txt.textContent = data.text;
+  div.appendChild(ts); div.appendChild(txt);
+
+  if (data.type === 'final') {
+    totalChars += data.text.length;
+    wordCountEl.textContent = `${totalChars} 文字`;
+    setEmotion(detectEmotion(data.text));
+    setTimeout(() => setEmotion('neutral'), 3000);
+  } else {
+    div.classList.add('interim');
+  }
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+// ============================================================
+//  STOP
+// ============================================================
 function stopRecording() {
   if (!isRecording) return;
   isRecording = false;
@@ -415,25 +385,26 @@ function stopRecording() {
   document.getElementById('micLabel').classList.remove('on');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 
-  // Stop recognition
-  if (recognition) {
-    try { recognition.abort(); } catch(e) {}
-    recognition = null;
+  // Send EOF and close WS
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({command: 'eof'}));
+    setTimeout(() => { try { ws.close(); } catch(e) {} }, 500);
   }
+  ws = null;
 
-  // Stop visualizer
+  // Stop audio
+  if (scriptNode) { scriptNode.disconnect(); scriptNode = null; }
   if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
   if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-  mouth.setAttribute('ry', '3');
-  glow.classList.remove('active');
+  mouth.setAttribute('ry', '3'); glow.classList.remove('active');
   setEmotion('neutral');
   const r = waveCanvas.parentElement.getBoundingClientRect();
   ctx.clearRect(0, 0, r.width, r.height);
 }
 
 // ============================================================
-//  ANIMATION (visualizer + mouth)
+//  ANIMATION
 // ============================================================
 function animate() {
   if (!analyser) return;
@@ -454,50 +425,33 @@ function animate() {
   ctx.clearRect(0, 0, w, h);
   const barCount = 48, barW = w / barCount - 2, step = Math.floor(bufLen / barCount);
   for (let i = 0; i < barCount; i++) {
-    const val = freqData[i * step] / 255;
-    const barH = val * h * 0.85;
-    ctx.fillStyle = `hsla(${240 + val * 80}, 80%, 65%, ${0.4 + val * 0.5})`;
-    ctx.beginPath(); ctx.roundRect(i * (barW + 2) + 1, h - barH, barW, barH, 3); ctx.fill();
+    const val = freqData[i * step] / 255, barH = val * h * 0.85;
+    ctx.fillStyle = `hsla(${240 + val*80}, 80%, 65%, ${0.4 + val*0.5})`;
+    ctx.beginPath(); ctx.roundRect(i*(barW+2)+1, h-barH, barW, barH, 3); ctx.fill();
   }
   ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
   const sliceW = w / bufLen;
   for (let i = 0; i < bufLen; i++) {
-    const y = (timeData[i] / 128.0 * h) / 2;
-    if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sliceW, y);
+    const y = (timeData[i]/128.0*h)/2;
+    if (i===0) ctx.moveTo(0,y); else ctx.lineTo(i*sliceW, y);
   }
   ctx.stroke();
   animFrame = requestAnimationFrame(animate);
 }
 
 // ============================================================
-//  TAP HANDLER (mobile-safe)
+//  TAP HANDLER
 // ============================================================
 let tapLock = false;
 function toggleRecording() {
   if (tapLock) return;
-  tapLock = true;
-  setTimeout(() => { tapLock = false; }, 500);
-  dbg(`toggle: isRecording=${isRecording}, status=${statusEl.textContent}`);
-
-  if (isRecording && isIOS && statusEl.textContent.includes('再開')) {
-    // iOS: recognition ended mid-session, user tapped to restart
-    dbg('iOS: restarting recognition via user tap');
-    recognition = createRecognition();
-    try {
-      recognition.start();
-      statusEl.textContent = '🔴 録音中…';
-      dbg('recognition restarted (iOS user tap)');
-    } catch(e) {
-      dbg(`iOS restart failed: ${e.message}`);
-    }
-    return;
-  }
-
+  tapLock = true; setTimeout(() => { tapLock = false; }, 500);
+  dbg(`toggle: isRecording=${isRecording}`);
   if (isRecording) stopRecording(); else startRecording();
 }
 let usedTouch = false;
 micBtn.addEventListener('touchend', (e) => { e.preventDefault(); usedTouch = true; toggleRecording(); }, { passive: false });
-micBtn.addEventListener('click', (e) => { if (usedTouch) { usedTouch = false; return; } toggleRecording(); });
+micBtn.addEventListener('click', () => { if (usedTouch) { usedTouch = false; return; } toggleRecording(); });
 micBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // ============================================================
@@ -513,7 +467,7 @@ document.getElementById('dlBtn').addEventListener('click', () => {
   const entries = transcript.querySelectorAll('.entry:not(.interim)');
   if (!entries.length) { toast('テキストがありません'); return; }
   const text = Array.from(entries).map(e => `[${e.querySelector('.ts').textContent}] ${e.querySelector('.text').textContent}`).join('\n');
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   const d = new Date();
   a.download = `transcript_${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate().toString().padStart(2,'0')}_${d.getHours().toString().padStart(2,'0')}${d.getMinutes().toString().padStart(2,'0')}.txt`;
@@ -522,13 +476,11 @@ document.getElementById('dlBtn').addEventListener('click', () => {
 document.getElementById('clearBtn').addEventListener('click', () => {
   transcript.innerHTML = ''; totalChars = 0; wordCountEl.textContent = '0 文字'; toast('🗑 クリアしました');
 });
-
-// Keyboard shortcut
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggleRecording(); }
 });
 
-dbg('App initialized');
+dbg('App initialized (Vosk server mode)');
 </script>
 </body>
 </html>
