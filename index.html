@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音声認識アバター</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+  h1 {
+    margin-top: 24px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+  }
+
+  /* Avatar container */
+  .avatar-wrap {
+    margin: 30px 0 20px;
+    position: relative;
+    width: 220px;
+    height: 220px;
+  }
+  .avatar-glow {
+    position: absolute;
+    inset: -18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,180,255,0.25) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .avatar-glow.active { opacity: 1; }
+
+  /* SVG Avatar */
+  .avatar-svg {
+    width: 220px;
+    height: 220px;
+  }
+
+  /* Mic button */
+  .mic-btn {
+    margin: 10px 0 20px;
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.08);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .mic-btn:hover { background: rgba(255,255,255,0.15); }
+  .mic-btn.recording {
+    border-color: #ff4757;
+    background: rgba(255,71,87,0.2);
+    animation: pulse 1.5s infinite;
+  }
+  .mic-btn svg { width: 32px; height: 32px; fill: #fff; }
+  .mic-btn.recording svg { fill: #ff4757; }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,71,87,0.4); }
+    50% { box-shadow: 0 0 0 18px rgba(255,71,87,0); }
+  }
+
+  .status {
+    font-size: 0.85rem;
+    opacity: 0.6;
+    margin-bottom: 16px;
+    min-height: 1.2em;
+  }
+
+  /* Transcript area */
+  .transcript-box {
+    width: min(90vw, 640px);
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 30px;
+    overflow-y: auto;
+    max-height: 40vh;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .transcript-box p {
+    margin-bottom: 10px;
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+  .transcript-box p.interim {
+    opacity: 0.45;
+    font-style: italic;
+  }
+  .transcript-box:empty::after {
+    content: 'マイクボタンを押して話しかけてください 🎤';
+    opacity: 0.35;
+  }
+
+  .error-msg {
+    background: rgba(255,71,87,0.15);
+    border: 1px solid rgba(255,71,87,0.3);
+    border-radius: 10px;
+    padding: 12px 20px;
+    margin: 10px;
+    max-width: 90vw;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* Mouth animation */
+  @keyframes talk {
+    0%, 100% { ry: 3; }
+    25% { ry: 8; }
+    50% { ry: 5; }
+    75% { ry: 10; }
+  }
+  .mouth-talking {
+    animation: talk 0.3s infinite;
+  }
+
+  /* Eye blink */
+  @keyframes blink {
+    0%,94%,100% { transform: scaleY(1); }
+    97% { transform: scaleY(0.1); }
+  }
+  .eye {
+    animation: blink 4s infinite;
+    transform-origin: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎙️ 音声認識アバター</h1>
+
+<div class="avatar-wrap">
+  <div class="avatar-glow" id="glow"></div>
+  <svg class="avatar-svg" viewBox="0 0 220 220">
+    <!-- Head -->
+    <circle cx="110" cy="110" r="90" fill="#6c5ce7" />
+    <circle cx="110" cy="110" r="85" fill="#a29bfe" />
+    <!-- Hair -->
+    <ellipse cx="110" cy="55" rx="75" ry="35" fill="#2d3436" />
+    <ellipse cx="55" cy="80" rx="18" ry="30" fill="#2d3436" />
+    <ellipse cx="165" cy="80" rx="18" ry="30" fill="#2d3436" />
+    <!-- Face -->
+    <ellipse cx="110" cy="120" rx="65" ry="60" fill="#ffeaa7" />
+    <!-- Eyes -->
+    <g class="eye">
+      <ellipse cx="85" cy="110" rx="10" ry="11" fill="#fff" />
+      <circle cx="85" cy="110" r="5" fill="#2d3436" />
+      <circle cx="87" cy="108" r="2" fill="#fff" />
+    </g>
+    <g class="eye">
+      <ellipse cx="135" cy="110" rx="10" ry="11" fill="#fff" />
+      <circle cx="135" cy="110" r="5" fill="#2d3436" />
+      <circle cx="137" cy="108" r="2" fill="#fff" />
+    </g>
+    <!-- Eyebrows -->
+    <path d="M70 95 Q85 88 100 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M120 95 Q135 88 150 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Nose -->
+    <ellipse cx="110" cy="125" rx="3" ry="4" fill="#f0d48a" />
+    <!-- Cheeks -->
+    <ellipse cx="70" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
+    <ellipse cx="150" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
+    <!-- Mouth -->
+    <ellipse id="mouth" cx="110" cy="145" rx="12" ry="3" fill="#e17055" />
+  </svg>
+</div>
+
+<!-- Mic button -->
+<button class="mic-btn" id="micBtn" title="録音開始 / 停止">
+  <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+</button>
+
+<div class="status" id="status">停止中</div>
+
+<div class="error-msg" id="errorMsg"></div>
+
+<div class="transcript-box" id="transcript"></div>
+
+<script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const micBtn    = document.getElementById('micBtn');
+const statusEl  = document.getElementById('status');
+const transcript= document.getElementById('transcript');
+const errorMsg  = document.getElementById('errorMsg');
+const mouth     = document.getElementById('mouth');
+const glow      = document.getElementById('glow');
+
+let recognition = null;
+let isRecording = false;
+
+// Audio analyser for mouth sync
+let audioCtx, analyser, micStream, animFrame;
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('show');
+}
+
+if (!SpeechRecognition) {
+  showError('このブラウザは Web Speech API に対応していません。Chrome / Edge をお使いください。');
+  micBtn.disabled = true;
+} else {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'ja-JP';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
+    // Remove old interim
+    document.querySelectorAll('.interim').forEach(el => el.remove());
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const result = e.results[i];
+      const p = document.createElement('p');
+      p.textContent = result[0].transcript;
+      if (result.isFinal) {
+        p.classList.remove('interim');
+      } else {
+        p.classList.add('interim');
+      }
+      transcript.appendChild(p);
+    }
+    transcript.scrollTop = transcript.scrollHeight;
+  };
+
+  recognition.onerror = (e) => {
+    console.error('Speech error', e.error);
+    if (e.error === 'not-allowed') {
+      showError('マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください。');
+    }
+    stopRecording();
+  };
+
+  recognition.onend = () => {
+    // Auto-restart if still recording (browser sometimes stops)
+    if (isRecording) {
+      try { recognition.start(); } catch(e) {}
+    }
+  };
+}
+
+async function startRecording() {
+  isRecording = true;
+  micBtn.classList.add('recording');
+  statusEl.textContent = '🔴 録音中…';
+  errorMsg.classList.remove('show');
+
+  try {
+    recognition.start();
+  } catch(e) {}
+
+  // Start audio analyser for mouth animation
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const source = audioCtx.createMediaStreamSource(micStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    animateMouth();
+  } catch(e) {
+    console.warn('Audio analyser failed', e);
+  }
+}
+
+function stopRecording() {
+  isRecording = false;
+  micBtn.classList.remove('recording');
+  statusEl.textContent = '停止中';
+  try { recognition.stop(); } catch(e) {}
+
+  // Stop audio
+  if (micStream) {
+    micStream.getTracks().forEach(t => t.stop());
+    micStream = null;
+  }
+  if (audioCtx) {
+    audioCtx.close();
+    audioCtx = null;
+  }
+  if (animFrame) {
+    cancelAnimationFrame(animFrame);
+    animFrame = null;
+  }
+  mouth.setAttribute('ry', '3');
+  mouth.classList.remove('mouth-talking');
+  glow.classList.remove('active');
+}
+
+function animateMouth() {
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+
+  // Average volume
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) sum += data[i];
+  const avg = sum / data.length;
+
+  // Map volume to mouth open (ry 3..14)
+  const openness = Math.min(14, 3 + (avg / 255) * 30);
+  mouth.setAttribute('ry', openness.toFixed(1));
+
+  if (avg > 15) {
+    glow.classList.add('active');
+  } else {
+    glow.classList.remove('active');
+  }
+
+  animFrame = requestAnimationFrame(animateMouth);
+}
+
+micBtn.addEventListener('click', () => {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
+</script>
+</body>
+</html>
