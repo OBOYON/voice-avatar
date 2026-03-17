@@ -326,17 +326,25 @@ function createRecognition() {
     recognitionRunning = false;
     dbg(`recognition.onend (isRecording=${isRecording})`);
     if (isRecording) {
-      // Recreate and restart (avoids stale state issues)
-      setTimeout(() => {
-        if (!isRecording) return;
-        dbg('restarting recognition...');
-        recognition = createRecognition();
-        try {
-          recognition.start();
-        } catch(err) {
-          dbg(`restart failed: ${err.message}`);
-        }
-      }, 300);
+      if (isIOS) {
+        // iOS: cannot auto-restart without user gesture.
+        // Show a prompt so user knows to tap again.
+        dbg('iOS: recognition ended, need user tap to restart');
+        statusEl.textContent = '🔄 タップで再開';
+        // Keep isRecording true so next tap calls stop then start
+      } else {
+        // Desktop Chrome/Edge: auto-restart works fine
+        setTimeout(() => {
+          if (!isRecording) return;
+          dbg('restarting recognition...');
+          recognition = createRecognition();
+          try {
+            recognition.start();
+          } catch(err) {
+            dbg(`restart failed: ${err.message}`);
+          }
+        }, 300);
+      }
     }
   };
 
@@ -354,7 +362,10 @@ langSel.addEventListener('change', () => {
 // ============================================================
 //  START / STOP
 // ============================================================
-async function startRecording() {
+// MUST be synchronous — iOS Safari requires recognition.start()
+// to be called directly in the user-gesture callstack.
+// If this is async, iOS treats it as non-user-initiated and blocks it.
+function startRecording() {
   if (isRecording) return;
   isRecording = true;
   dbg('startRecording()');
@@ -366,16 +377,16 @@ async function startRecording() {
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
 
-  // 1) Start speech recognition FIRST (it uses its own mic internally)
+  // 1) Start speech recognition SYNCHRONOUSLY in user gesture callstack
   recognition = createRecognition();
   try {
     recognition.start();
-    dbg('recognition.start() called');
+    dbg('recognition.start() called (sync in gesture)');
   } catch(e) {
     dbg(`recognition.start() error: ${e.message}`);
   }
 
-  // 2) Optionally get mic for visualizer (NOT required for speech recognition)
+  // 2) Visualizer runs async separately — does NOT affect recognition
   startVisualizer();
 }
 
@@ -466,7 +477,22 @@ function toggleRecording() {
   if (tapLock) return;
   tapLock = true;
   setTimeout(() => { tapLock = false; }, 500);
-  dbg(`toggle: isRecording=${isRecording}`);
+  dbg(`toggle: isRecording=${isRecording}, status=${statusEl.textContent}`);
+
+  if (isRecording && isIOS && statusEl.textContent.includes('再開')) {
+    // iOS: recognition ended mid-session, user tapped to restart
+    dbg('iOS: restarting recognition via user tap');
+    recognition = createRecognition();
+    try {
+      recognition.start();
+      statusEl.textContent = '🔴 録音中…';
+      dbg('recognition restarted (iOS user tap)');
+    } catch(e) {
+      dbg(`iOS restart failed: ${e.message}`);
+    }
+    return;
+  }
+
   if (isRecording) stopRecording(); else startRecording();
 }
 let usedTouch = false;
