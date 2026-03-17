@@ -99,8 +99,12 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
   }
   .mic-btn:hover { background: rgba(255,255,255,0.15); }
+  .mic-btn:active { transform: scale(0.92); }
   .mic-btn.recording {
     border-color: #ff4757;
     background: rgba(255,71,87,0.2);
@@ -120,6 +124,17 @@
     min-width: 60px;
     text-align: center;
   }
+
+  .mic-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    transition: all 0.3s;
+  }
+  .mic-label.on { color: #ff4757; opacity: 0.9; }
 
   .status {
     font-size: 0.8rem;
@@ -282,6 +297,7 @@
   <span class="duration" id="wordCount">0 文字</span>
 </div>
 
+<div class="mic-label" id="micLabel">TAP to START</div>
 <div class="status" id="status">停止中</div>
 <div class="error-msg" id="errorMsg"></div>
 
@@ -471,6 +487,8 @@ async function startRecording() {
   isRecording = true;
   micBtn.classList.add('recording');
   statusEl.textContent = '🔴 録音中…';
+  document.getElementById('micLabel').textContent = 'TAP to STOP';
+  document.getElementById('micLabel').classList.add('on');
   errorMsg.classList.remove('show');
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
@@ -494,6 +512,8 @@ function stopRecording() {
   isRecording = false;
   micBtn.classList.remove('recording');
   statusEl.textContent = '停止中';
+  document.getElementById('micLabel').textContent = 'TAP to START';
+  document.getElementById('micLabel').classList.remove('on');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   try { recognition.stop(); } catch(e) {}
 
@@ -565,10 +585,19 @@ function animate() {
   animFrame = requestAnimationFrame(animate);
 }
 
-micBtn.addEventListener('click', () => {
+// Toggle with single tap — prevent ghost double-fires
+let lastTap = 0;
+function toggleRecording(e) {
+  if (e) e.preventDefault();
+  const now = Date.now();
+  if (now - lastTap < 400) return; // debounce
+  lastTap = now;
   if (isRecording) stopRecording();
   else startRecording();
-});
+}
+micBtn.addEventListener('pointerup', toggleRecording);
+// Prevent context menu on long-press
+micBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // ─── Action buttons ───
 document.getElementById('copyBtn').addEventListener('click', () => {
