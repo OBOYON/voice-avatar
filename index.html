@@ -461,16 +461,19 @@ if (!SpeechRecognition) {
     console.error('Speech error', e.error);
     if (e.error === 'not-allowed') {
       showError('マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください。');
-    } else if (e.error === 'no-speech') {
-      // ignore, auto-restart handles it
-      return;
+      stopRecording();
     }
-    stopRecording();
+    // no-speech, aborted, network etc: let onend handle restart
   };
 
   recognition.onend = () => {
     if (isRecording) {
-      try { recognition.start(); } catch(e) {}
+      // Restart after brief delay to avoid rapid-fire errors
+      setTimeout(() => {
+        if (isRecording) {
+          try { recognition.start(); } catch(e) { console.warn('restart failed', e); }
+        }
+      }, 300);
     }
   };
 
@@ -585,18 +588,28 @@ function animate() {
   animFrame = requestAnimationFrame(animate);
 }
 
-// Toggle with single tap — prevent ghost double-fires
-let lastTap = 0;
-function toggleRecording(e) {
-  if (e) e.preventDefault();
-  const now = Date.now();
-  if (now - lastTap < 400) return; // debounce
-  lastTap = now;
+// ─── Single-tap toggle (mobile-safe) ───
+let tapLock = false;
+function toggleRecording() {
+  if (tapLock) return;
+  tapLock = true;
+  setTimeout(() => { tapLock = false; }, 500);
+
   if (isRecording) stopRecording();
   else startRecording();
 }
-micBtn.addEventListener('pointerup', toggleRecording);
-// Prevent context menu on long-press
+
+// Use touchend on mobile, click on desktop — never both
+let usedTouch = false;
+micBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  usedTouch = true;
+  toggleRecording();
+}, { passive: false });
+micBtn.addEventListener('click', (e) => {
+  if (usedTouch) { usedTouch = false; return; }
+  toggleRecording();
+});
 micBtn.addEventListener('contextmenu', e => e.preventDefault());
 
 // ─── Action buttons ───
@@ -639,7 +652,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && e.target === document.body) {
     e.preventDefault();
-    micBtn.click();
+    toggleRecording();
   }
 });
 </script>
