@@ -651,6 +651,9 @@ async function sendToLLM(userText) {
     chatHistory.push({ role: 'assistant', content: fullResponse });
 
     // Speak the response using browser TTS
+    // Strip markdown and emoji from AI response
+    fullResponse = fullResponse.replace(/\*\*|__|~~|`/g, '').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
+    txt.textContent = fullResponse;
     speakText(fullResponse);
 
   } catch(e) {
