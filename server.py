@@ -1,12 +1,21 @@
 #!/usr/bin/env python3
-"""WebSocket speech recognition server using Vosk + Ollama LLM."""
+"""WebSocket speech recognition server using Vosk + Ollama LLM + Edge-TTS."""
 import json
 import asyncio
+import io
+import hashlib
+import os
 from pathlib import Path
 
 import aiohttp
+import edge_tts
 from aiohttp import web
 from vosk import Model, KaldiRecognizer, SetLogLevel
+
+# TTS cache dir
+TTS_CACHE = Path(__file__).parent / ".tts_cache"
+TTS_CACHE.mkdir(exist_ok=True)
+TTS_VOICE = "ja-JP-NanamiNeural"  # Female, friendly
 
 SetLogLevel(-1)
 
@@ -114,6 +123,38 @@ async def chat_handler(request):
     return response
 
 
+async def tts_handler(request):
+    """POST /api/tts - Convert text to speech using edge-tts."""
+    body = await request.json()
+    text = body.get("text", "").strip()
+    voice = body.get("voice", TTS_VOICE)
+
+    if not text:
+        return web.json_response({"error": "no text"}, status=400)
+
+    # Cache by text+voice hash
+    key = hashlib.md5(f"{voice}:{text}".encode()).hexdigest()
+    cached = TTS_CACHE / f"{key}.mp3"
+
+    if not cached.exists():
+        try:
+            communicate = edge_tts.Communicate(text, voice)
+            await communicate.save(str(cached))
+            print(f"[TTS] Generated: {text[:40]}...")
+        except Exception as e:
+            print(f"[TTS] Error: {e}")
+            return web.json_response({"error": str(e)}, status=500)
+
+    return web.FileResponse(cached, headers={"Content-Type": "audio/mpeg"})
+
+
+async def tts_voices_handler(request):
+    """GET /api/tts/voices - List available Japanese voices."""
+    voices = await edge_tts.list_voices()
+    ja_voices = [v for v in voices if v["Locale"].startswith("ja-JP")]
+    return web.json_response(ja_voices)
+
+
 async def index_handler(request):
     return web.FileResponse(Path(STATIC_DIR) / "index.html")
 
@@ -121,6 +162,8 @@ async def index_handler(request):
 app = web.Application()
 app.router.add_get("/ws", websocket_handler)
 app.router.add_post("/api/chat", chat_handler)
+app.router.add_post("/api/tts", tts_handler)
+app.router.add_get("/api/tts/voices", tts_voices_handler)
 app.router.add_get("/", index_handler)
 app.router.add_static("/static/", STATIC_DIR)
 

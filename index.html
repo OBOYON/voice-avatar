@@ -588,38 +588,92 @@ async function sendToLLM(userText) {
 }
 
 // ============================================================
-//  TEXT-TO-SPEECH (browser built-in)
+//  TEXT-TO-SPEECH (Edge-TTS via server)
 // ============================================================
-function speakText(text) {
-  if (!window.speechSynthesis) return;
-  // Cancel any ongoing speech
-  speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ja-JP';
-  utter.rate = 1.1;
-  utter.pitch = 1.0;
+let ttsAudio = null;
+let talkFrame = null;
+let ttsAnalyser = null;
+let ttsAudioCtx = null;
 
-  // Animate mouth while speaking
-  utter.onstart = () => {
-    setEmotion('happy');
-    glow.classList.add('active');
-    animateTalking();
-  };
-  utter.onend = () => {
-    setEmotion('neutral');
-    glow.classList.remove('active');
-    mouth.setAttribute('ry', '3');
-    if (talkFrame) { cancelAnimationFrame(talkFrame); talkFrame = null; }
-  };
+async function speakText(text) {
+  if (!text) return;
+  dbg(`TTS: requesting "${text.slice(0, 40)}..."`);
 
-  speechSynthesis.speak(utter);
+  // Stop any current playback
+  stopSpeaking();
+
+  try {
+    const resp = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!resp.ok) throw new Error(`TTS HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+
+    ttsAudio = new Audio(url);
+
+    // Connect to analyser for mouth sync
+    ttsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ttsAudioCtx.createMediaElementSource(ttsAudio);
+    ttsAnalyser = ttsAudioCtx.createAnalyser();
+    ttsAnalyser.fftSize = 256;
+    source.connect(ttsAnalyser);
+    ttsAnalyser.connect(ttsAudioCtx.destination);
+
+    ttsAudio.onplay = () => {
+      dbg('TTS playing');
+      setEmotion('happy');
+      glow.classList.add('active');
+      animateTalking();
+    };
+    ttsAudio.onended = () => {
+      dbg('TTS ended');
+      stopSpeaking();
+      URL.revokeObjectURL(url);
+    };
+    ttsAudio.onerror = (e) => {
+      dbg(`TTS audio error: ${e}`);
+      stopSpeaking();
+    };
+
+    await ttsAudio.play();
+  } catch(e) {
+    dbg(`TTS error: ${e.message}`);
+    // Fallback to browser TTS
+    if (window.speechSynthesis) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ja-JP'; utter.rate = 1.1;
+      speechSynthesis.speak(utter);
+    }
+  }
 }
 
-let talkFrame = null;
+function stopSpeaking() {
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  if (ttsAudioCtx) { ttsAudioCtx.close().catch(()=>{}); ttsAudioCtx = null; }
+  ttsAnalyser = null;
+  setEmotion('neutral');
+  glow.classList.remove('active');
+  mouth.setAttribute('ry', '3');
+  if (talkFrame) { cancelAnimationFrame(talkFrame); talkFrame = null; }
+}
+
 function animateTalking() {
-  const ry = 3 + Math.random() * 11;
-  mouth.setAttribute('ry', ry.toFixed(1));
-  talkFrame = requestAnimationFrame(() => setTimeout(animateTalking, 80 + Math.random() * 80));
+  if (ttsAnalyser) {
+    const data = new Uint8Array(ttsAnalyser.frequencyBinCount);
+    ttsAnalyser.getByteFrequencyData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i];
+    const avg = sum / data.length;
+    const ry = Math.min(14, 3 + (avg / 255) * 28);
+    mouth.setAttribute('ry', ry.toFixed(1));
+  } else {
+    const ry = 3 + Math.random() * 11;
+    mouth.setAttribute('ry', ry.toFixed(1));
+  }
+  talkFrame = requestAnimationFrame(animateTalking);
 }
 
 dbg('App initialized (Vosk + Ollama mode)');
