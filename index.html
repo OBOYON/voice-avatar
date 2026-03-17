@@ -422,16 +422,18 @@ function handleResult(data) {
     wordCountEl.textContent = `${totalChars} 文字`;
     setEmotion(detectEmotion(data.text));
     setTimeout(() => setEmotion('neutral'), 3000);
-    // Queue text for AI response
+    // Queue text for AI response (only if it's a question)
     if (aiEnabled) {
       pendingText += (pendingText ? ' ' : '') + data.text;
       if (pendingTimer) clearTimeout(pendingTimer);
-      // Wait 2s of silence before sending to LLM
       pendingTimer = setTimeout(() => {
-        if (pendingText) {
+        if (pendingText && isQuestion(pendingText)) {
+          dbg(`Question detected: "${pendingText}"`);
           sendToLLM(pendingText);
-          pendingText = '';
+        } else if (pendingText) {
+          dbg(`Not a question, skipping AI: "${pendingText}"`);
         }
+        pendingText = '';
       }, 2000);
     }
   } else {
@@ -724,6 +726,24 @@ function animateTalking() {
     mouth.setAttribute('ry', (3 + Math.random() * 11).toFixed(1));
   }
   talkFrame = requestAnimationFrame(animateTalking);
+}
+
+// ============================================================
+//  QUESTION DETECTION
+// ============================================================
+function isQuestion(text) {
+  const t = text.replace(/\s+/g, '');
+  // Japanese question markers
+  if (/[？?]/.test(t)) return true;
+  // Sentence-ending question particles/patterns
+  if (/(.か|.かな|.かしら|.の|.かい|.だい|.ですか|.ますか|.でしょうか|.だろうか|.かね|.っけ|.かよ)$/.test(t)) return true;
+  // Question words anywhere
+  if (/(なに|何|なん|どう|どこ|どれ|どの|どちら|どなた|だれ|誰|いつ|なぜ|なんで|どうして|どうやって|いくつ|いくら|どのくらい|どれくらい)/.test(t)) return true;
+  // Commands / requests (also warrant a response)
+  if (/(教えて|おしえて|して|ください|くれ|頼む|たのむ|お願い|おねがい|調べて|しらべて|説明|せつめい|答えて|こたえて|知りたい|しりたい|聞きたい|ききたい|教えろ|やって|作って|つくって|書いて|かいて|読んで|よんで|翻訳|ほんやく|変換|へんかん)/.test(t)) return true;
+  // English question patterns (if using English)
+  if (/^(what|who|where|when|why|how|is|are|do|does|did|can|could|would|should|will|shall|may|might)\b/i.test(text.trim())) return true;
+  return false;
 }
 
 dbg('App initialized (Vosk + Ollama mode)');
