@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>音声認識アバター</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,100 +16,44 @@
     align-items: center;
     overflow-x: hidden;
   }
-  h1 {
-    margin-top: 20px;
-    font-size: 1.4rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    opacity: 0.9;
-  }
+  h1 { margin-top: 20px; font-size: 1.4rem; font-weight: 600; letter-spacing: 0.05em; opacity: 0.9; }
 
-  /* Controls bar */
-  .controls {
-    display: flex;
-    gap: 8px;
-    margin: 12px 0 0;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+  .controls { display: flex; gap: 8px; margin: 12px 0 0; flex-wrap: wrap; justify-content: center; }
   .ctrl-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; border-radius: 8px; padding: 6px 14px; font-size: 0.8rem;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
   }
   .ctrl-btn:hover { background: rgba(255,255,255,0.2); }
-  .ctrl-btn.active { background: rgba(108,92,231,0.5); border-color: #6c5ce7; }
-  select.ctrl-btn { appearance: none; padding-right: 24px;
+  select.ctrl-btn {
+    appearance: none; padding-right: 24px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 8px center;
   }
 
-  /* Avatar container */
-  .avatar-wrap {
-    margin: 20px 0 10px;
-    position: relative;
-    width: 200px;
-    height: 200px;
-  }
+  .avatar-wrap { margin: 20px 0 10px; position: relative; width: 200px; height: 200px; }
   .avatar-glow {
-    position: absolute;
-    inset: -20px;
-    border-radius: 50%;
+    position: absolute; inset: -20px; border-radius: 50%;
     background: radial-gradient(circle, rgba(100,180,255,0.3) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.3s;
   }
   .avatar-glow.active { opacity: 1; }
   .avatar-svg { width: 200px; height: 200px; }
 
-  /* Waveform */
-  .waveform-wrap {
-    width: min(85vw, 500px);
-    height: 50px;
-    margin: 6px 0;
-    position: relative;
-  }
-  .waveform-wrap canvas {
-    width: 100%; height: 100%;
-    border-radius: 10px;
-  }
+  .waveform-wrap { width: min(85vw, 500px); height: 50px; margin: 6px 0; }
+  .waveform-wrap canvas { width: 100%; height: 100%; border-radius: 10px; }
 
-  /* Mic button row */
-  .mic-row {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    margin: 8px 0;
-  }
+  .mic-row { display: flex; align-items: center; gap: 18px; margin: 8px 0; }
   .mic-btn {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.3);
-    background: rgba(255,255,255,0.08);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    user-select: none;
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; user-select: none;
   }
   .mic-btn:hover { background: rgba(255,255,255,0.15); }
   .mic-btn:active { transform: scale(0.92); }
-  .mic-btn.recording {
-    border-color: #ff4757;
-    background: rgba(255,71,87,0.2);
-    animation: pulse 1.5s infinite;
-  }
+  .mic-btn.recording { border-color: #ff4757; background: rgba(255,71,87,0.2); animation: pulse 1.5s infinite; }
   .mic-btn svg { width: 28px; height: 28px; fill: #fff; }
   .mic-btn.recording svg { fill: #ff4757; }
   @keyframes pulse {
@@ -117,117 +61,49 @@
     50% { box-shadow: 0 0 0 16px rgba(255,71,87,0); }
   }
 
-  .duration {
-    font-size: 1.1rem;
-    font-variant-numeric: tabular-nums;
-    opacity: 0.7;
-    min-width: 60px;
-    text-align: center;
-  }
-
-  .mic-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    margin-top: 4px;
-    text-transform: uppercase;
-    opacity: 0.5;
-    transition: all 0.3s;
-  }
+  .duration { font-size: 1.1rem; font-variant-numeric: tabular-nums; opacity: 0.7; min-width: 60px; text-align: center; }
+  .mic-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; margin-top: 4px; opacity: 0.5; transition: all 0.3s; }
   .mic-label.on { color: #ff4757; opacity: 0.9; }
+  .status { font-size: 0.8rem; opacity: 0.55; margin-bottom: 8px; min-height: 1.2em; }
 
-  .status {
-    font-size: 0.8rem;
-    opacity: 0.55;
-    margin-bottom: 8px;
-    min-height: 1.2em;
-  }
-
-  /* Transcript area */
   .transcript-box {
-    width: min(90vw, 660px);
-    flex: 1;
-    background: rgba(255,255,255,0.06);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    overflow-y: auto;
-    max-height: 35vh;
-    backdrop-filter: blur(6px);
+    width: min(90vw, 660px); flex: 1; background: rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;
+    overflow-y: auto; max-height: 35vh; backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.08);
   }
-  .transcript-box .entry {
-    margin-bottom: 8px;
-    line-height: 1.65;
-    font-size: 0.95rem;
-    display: flex;
-    gap: 10px;
-  }
-  .entry .ts {
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    opacity: 0.4;
-    padding-top: 2px;
-    font-variant-numeric: tabular-nums;
-    min-width: 52px;
-  }
+  .transcript-box .entry { margin-bottom: 8px; line-height: 1.65; font-size: 0.95rem; display: flex; gap: 10px; }
+  .entry .ts { flex-shrink: 0; font-size: 0.75rem; opacity: 0.4; padding-top: 2px; font-variant-numeric: tabular-nums; min-width: 52px; }
   .entry .text { flex: 1; }
-  .entry.interim .text {
-    opacity: 0.4;
-    font-style: italic;
-  }
-  .transcript-box:empty::after {
-    content: 'マイクボタンを押して話しかけてください 🎤';
-    opacity: 0.35;
-  }
+  .entry.interim .text { opacity: 0.4; font-style: italic; }
+  .transcript-box:empty::after { content: 'マイクボタンを押して話しかけてください 🎤'; opacity: 0.35; }
 
-  /* Action bar */
-  .action-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-
+  .action-bar { display: flex; gap: 8px; margin-bottom: 24px; }
   .error-msg {
-    background: rgba(255,71,87,0.15);
-    border: 1px solid rgba(255,71,87,0.3);
-    border-radius: 10px;
-    padding: 10px 18px;
-    margin: 6px;
-    max-width: 90vw;
-    display: none;
-    font-size: 0.9rem;
+    background: rgba(255,71,87,0.15); border: 1px solid rgba(255,71,87,0.3);
+    border-radius: 10px; padding: 10px 18px; margin: 6px; max-width: 90vw;
+    display: none; font-size: 0.9rem;
   }
   .error-msg.show { display: block; }
 
-  /* Toast */
   .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: rgba(108,92,231,0.9);
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    pointer-events: none;
-    opacity: 0;
-    transition: all 0.35s;
-    z-index: 100;
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: rgba(108,92,231,0.9); padding: 10px 24px; border-radius: 10px;
+    font-size: 0.85rem; pointer-events: none; opacity: 0; transition: all 0.35s; z-index: 100;
   }
-  .toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-  /* Eye blink */
-  @keyframes blink {
-    0%,94%,100% { transform: scaleY(1); }
-    97% { transform: scaleY(0.1); }
+  /* Debug log */
+  .debug-log {
+    position: fixed; bottom: 0; left: 0; right: 0; max-height: 120px;
+    overflow-y: auto; background: rgba(0,0,0,0.85); font-size: 0.65rem;
+    font-family: monospace; padding: 6px 10px; color: #0f0;
+    display: none; z-index: 200;
   }
+  .debug-log.show { display: block; }
+
+  @keyframes blink { 0%,94%,100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
   .eye { animation: blink 4s infinite; transform-origin: center; }
-
-  /* Eyebrow animations */
   .brow { transition: d 0.3s, transform 0.3s; }
 </style>
 </head>
@@ -244,50 +120,32 @@
     <option value="es-ES">🇪🇸 Español</option>
     <option value="fr-FR">🇫🇷 Français</option>
   </select>
+  <button class="ctrl-btn" id="debugToggle">🐛 Debug</button>
 </div>
 
 <div class="avatar-wrap">
   <div class="avatar-glow" id="glow"></div>
-  <svg class="avatar-svg" viewBox="0 0 220 220" id="avatarSvg">
-    <!-- Head bg -->
+  <svg class="avatar-svg" viewBox="0 0 220 220">
     <circle cx="110" cy="110" r="90" fill="#6c5ce7" />
     <circle cx="110" cy="110" r="85" fill="#a29bfe" />
-    <!-- Hair -->
     <ellipse cx="110" cy="55" rx="75" ry="35" fill="#2d3436" />
     <ellipse cx="55" cy="80" rx="18" ry="30" fill="#2d3436" />
     <ellipse cx="165" cy="80" rx="18" ry="30" fill="#2d3436" />
-    <!-- Face -->
     <ellipse cx="110" cy="120" rx="65" ry="60" fill="#ffeaa7" />
-    <!-- Eyes -->
-    <g class="eye" id="eyeL">
-      <ellipse cx="85" cy="110" rx="10" ry="11" fill="#fff" />
-      <circle class="pupil" cx="85" cy="110" r="5" fill="#2d3436" />
-      <circle cx="87" cy="108" r="2" fill="#fff" />
-    </g>
-    <g class="eye" id="eyeR">
-      <ellipse cx="135" cy="110" rx="10" ry="11" fill="#fff" />
-      <circle class="pupil" cx="135" cy="110" r="5" fill="#2d3436" />
-      <circle cx="137" cy="108" r="2" fill="#fff" />
-    </g>
-    <!-- Eyebrows -->
+    <g class="eye"><ellipse cx="85" cy="110" rx="10" ry="11" fill="#fff"/><circle cx="85" cy="110" r="5" fill="#2d3436"/><circle cx="87" cy="108" r="2" fill="#fff"/></g>
+    <g class="eye"><ellipse cx="135" cy="110" rx="10" ry="11" fill="#fff"/><circle cx="135" cy="110" r="5" fill="#2d3436"/><circle cx="137" cy="108" r="2" fill="#fff"/></g>
     <path class="brow" id="browL" d="M70 95 Q85 88 100 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     <path class="brow" id="browR" d="M120 95 Q135 88 150 95" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <!-- Nose -->
     <ellipse cx="110" cy="125" rx="3" ry="4" fill="#f0d48a" />
-    <!-- Cheeks -->
     <ellipse id="cheekL" cx="70" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
     <ellipse id="cheekR" cx="150" cy="130" rx="12" ry="7" fill="rgba(255,118,117,0.35)" />
-    <!-- Mouth -->
     <ellipse id="mouth" cx="110" cy="145" rx="12" ry="3" fill="#e17055" />
-    <!-- Smile lines (hidden by default) -->
     <path id="smileL" d="M92 148 Q88 155 82 152" stroke="#e17055" stroke-width="1.5" fill="none" opacity="0"/>
     <path id="smileR" d="M128 148 Q132 155 138 152" stroke="#e17055" stroke-width="1.5" fill="none" opacity="0"/>
   </svg>
 </div>
 
-<div class="waveform-wrap">
-  <canvas id="waveCanvas"></canvas>
-</div>
+<div class="waveform-wrap"><canvas id="waveCanvas"></canvas></div>
 
 <div class="mic-row">
   <span class="duration" id="duration">0:00</span>
@@ -297,215 +155,209 @@
   <span class="duration" id="wordCount">0 文字</span>
 </div>
 
-<div class="mic-label" id="micLabel">TAP to START</div>
+<div class="mic-label" id="micLabel">TAP TO START</div>
 <div class="status" id="status">停止中</div>
 <div class="error-msg" id="errorMsg"></div>
-
 <div class="transcript-box" id="transcript"></div>
-
 <div class="action-bar">
   <button class="ctrl-btn" id="copyBtn">📋 コピー</button>
   <button class="ctrl-btn" id="dlBtn">💾 保存</button>
   <button class="ctrl-btn" id="clearBtn">🗑 クリア</button>
 </div>
-
 <div class="toast" id="toast"></div>
+<div class="debug-log" id="debugLog"></div>
 
 <script>
-// ─── Elements ───
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const micBtn     = document.getElementById('micBtn');
-const statusEl   = document.getElementById('status');
-const transcript = document.getElementById('transcript');
-const errorMsg   = document.getElementById('errorMsg');
-const mouth      = document.getElementById('mouth');
-const glow       = document.getElementById('glow');
-const langSel    = document.getElementById('langSel');
-const durationEl = document.getElementById('duration');
-const wordCountEl= document.getElementById('wordCount');
-const waveCanvas = document.getElementById('waveCanvas');
-const toastEl    = document.getElementById('toast');
-const smileL     = document.getElementById('smileL');
-const smileR     = document.getElementById('smileR');
-const cheekL     = document.getElementById('cheekL');
-const cheekR     = document.getElementById('cheekR');
-const browL      = document.getElementById('browL');
-const browR      = document.getElementById('browR');
+// ============================================================
+//  DEBUG LOGGER
+// ============================================================
+const debugLog = document.getElementById('debugLog');
+function dbg(msg) {
+  const t = new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit',fractionalSecondDigits:1});
+  const line = document.createElement('div');
+  line.textContent = `[${t}] ${msg}`;
+  debugLog.appendChild(line);
+  debugLog.scrollTop = debugLog.scrollHeight;
+  console.log('[DBG]', msg);
+}
+document.getElementById('debugToggle').addEventListener('click', () => {
+  debugLog.classList.toggle('show');
+});
 
-let recognition = null;
+// ============================================================
+//  ELEMENTS
+// ============================================================
+const micBtn      = document.getElementById('micBtn');
+const statusEl    = document.getElementById('status');
+const transcript  = document.getElementById('transcript');
+const errorMsg    = document.getElementById('errorMsg');
+const mouth       = document.getElementById('mouth');
+const glow        = document.getElementById('glow');
+const langSel     = document.getElementById('langSel');
+const durationEl  = document.getElementById('duration');
+const wordCountEl = document.getElementById('wordCount');
+const waveCanvas  = document.getElementById('waveCanvas');
+const toastEl     = document.getElementById('toast');
+const smileL      = document.getElementById('smileL');
+const smileR      = document.getElementById('smileR');
+const cheekL      = document.getElementById('cheekL');
+const cheekR      = document.getElementById('cheekR');
+const browL       = document.getElementById('browL');
+const browR       = document.getElementById('browR');
+
+// ============================================================
+//  STATE
+// ============================================================
 let isRecording = false;
-let audioCtx, analyser, micStream, animFrame;
-let startTime = 0;
-let timerInterval = null;
-let totalChars = 0;
+let audioCtx = null, analyser = null, micStream = null, animFrame = null;
+let startTime = 0, timerInterval = null, totalChars = 0;
+let recognitionRunning = false; // tracks actual recognition state
 
-// Canvas setup
+// Canvas
 const ctx = waveCanvas.getContext('2d');
 function resizeCanvas() {
   const r = waveCanvas.parentElement.getBoundingClientRect();
-  waveCanvas.width = r.width * devicePixelRatio;
+  waveCanvas.width  = r.width  * devicePixelRatio;
   waveCanvas.height = r.height * devicePixelRatio;
-  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// ─── Toast ───
-function toast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add('show');
-  setTimeout(() => toastEl.classList.remove('show'), 2000);
+function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(() => toastEl.classList.remove('show'), 2000); }
+function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('show'); }
+function timeNow() { return new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function updateTimer() {
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  durationEl.textContent = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
 }
 
-// ─── Errors ───
-function showError(msg) {
-  errorMsg.textContent = msg;
-  errorMsg.classList.add('show');
-}
-
-// ─── Expression states ───
-let currentEmotion = 'neutral'; // neutral, happy, surprised
+// ============================================================
+//  EXPRESSION
+// ============================================================
+let currentEmotion = 'neutral';
 function setEmotion(em) {
   if (em === currentEmotion) return;
   currentEmotion = em;
-  switch(em) {
-    case 'happy':
-      smileL.setAttribute('opacity', '1');
-      smileR.setAttribute('opacity', '1');
-      cheekL.setAttribute('fill', 'rgba(255,118,117,0.55)');
-      cheekR.setAttribute('fill', 'rgba(255,118,117,0.55)');
-      browL.setAttribute('d', 'M70 97 Q85 90 100 97');
-      browR.setAttribute('d', 'M120 97 Q135 90 150 97');
-      break;
-    case 'surprised':
-      smileL.setAttribute('opacity', '0');
-      smileR.setAttribute('opacity', '0');
-      cheekL.setAttribute('fill', 'rgba(255,118,117,0.35)');
-      cheekR.setAttribute('fill', 'rgba(255,118,117,0.35)');
-      browL.setAttribute('d', 'M70 90 Q85 80 100 90');
-      browR.setAttribute('d', 'M120 90 Q135 80 150 90');
-      break;
-    default: // neutral
-      smileL.setAttribute('opacity', '0');
-      smileR.setAttribute('opacity', '0');
-      cheekL.setAttribute('fill', 'rgba(255,118,117,0.35)');
-      cheekR.setAttribute('fill', 'rgba(255,118,117,0.35)');
-      browL.setAttribute('d', 'M70 95 Q85 88 100 95');
-      browR.setAttribute('d', 'M120 95 Q135 88 150 95');
-  }
+  const cfg = {
+    happy:     { smile: '1', cheek: 'rgba(255,118,117,0.55)', browL: 'M70 97 Q85 90 100 97', browR: 'M120 97 Q135 90 150 97' },
+    surprised: { smile: '0', cheek: 'rgba(255,118,117,0.35)', browL: 'M70 90 Q85 80 100 90', browR: 'M120 90 Q135 80 150 90' },
+    neutral:   { smile: '0', cheek: 'rgba(255,118,117,0.35)', browL: 'M70 95 Q85 88 100 95', browR: 'M120 95 Q135 88 150 95' },
+  }[em] || {};
+  smileL.setAttribute('opacity', cfg.smile); smileR.setAttribute('opacity', cfg.smile);
+  cheekL.setAttribute('fill', cfg.cheek); cheekR.setAttribute('fill', cfg.cheek);
+  browL.setAttribute('d', cfg.browL); browR.setAttribute('d', cfg.browR);
 }
-
-// Detect emotion from text
 function detectEmotion(text) {
   if (/[！!]{2}|すご|びっくり|えっ|マジ|ほんと|wow|amazing|what/i.test(text)) return 'surprised';
   if (/[笑wW]|ありがと|嬉し|楽し|おもしろ|happy|thank|great|nice|haha|good/i.test(text)) return 'happy';
   return 'neutral';
 }
 
-// ─── Timer ───
-function updateTimer() {
-  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-  const m = Math.floor(elapsed / 60);
-  const s = elapsed % 60;
-  durationEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-}
+// ============================================================
+//  SPEECH RECOGNITION SETUP
+// ============================================================
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
 
-// ─── Timestamp ───
-function timeNow() {
-  const d = new Date();
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+dbg(`SpeechRecognition API: ${!!SpeechRecognition}, iOS: ${isIOS}`);
 
-// ─── Speech Recognition ───
 if (!SpeechRecognition) {
   showError('このブラウザは Web Speech API に対応していません。Chrome / Edge をお使いください。');
   micBtn.disabled = true;
-} else {
-  recognition = new SpeechRecognition();
-  recognition.lang = langSel.value;
-  recognition.continuous = true;
-  recognition.interimResults = true;
+}
 
-  recognition.onresult = (e) => {
+function createRecognition() {
+  if (!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = langSel.value;
+  r.continuous = !isIOS; // iOS: single-shot, then restart
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    recognitionRunning = true;
+    dbg('recognition.onstart');
+  };
+
+  r.onaudiostart = () => dbg('recognition.onaudiostart');
+  r.onsoundstart = () => dbg('recognition.onsoundstart');
+  r.onspeechstart = () => dbg('recognition.onspeechstart');
+
+  r.onresult = (e) => {
+    dbg(`onresult: ${e.results.length} results, resultIndex=${e.resultIndex}`);
     document.querySelectorAll('.interim').forEach(el => el.remove());
 
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const result = e.results[i];
       const div = document.createElement('div');
       div.className = 'entry';
-      const ts = document.createElement('span');
-      ts.className = 'ts';
-      ts.textContent = timeNow();
-      const txt = document.createElement('span');
-      txt.className = 'text';
-      txt.textContent = result[0].transcript;
-      div.appendChild(ts);
-      div.appendChild(txt);
+      const ts = document.createElement('span'); ts.className = 'ts'; ts.textContent = timeNow();
+      const txt = document.createElement('span'); txt.className = 'text'; txt.textContent = result[0].transcript;
+      div.appendChild(ts); div.appendChild(txt);
 
       if (result.isFinal) {
+        dbg(`FINAL: "${result[0].transcript}"`);
         totalChars += result[0].transcript.length;
         wordCountEl.textContent = `${totalChars} 文字`;
-        // Detect emotion
         setEmotion(detectEmotion(result[0].transcript));
-        // Reset emotion after 3s
         setTimeout(() => setEmotion('neutral'), 3000);
       } else {
         div.classList.add('interim');
+        dbg(`interim: "${result[0].transcript}"`);
       }
       transcript.appendChild(div);
     }
     transcript.scrollTop = transcript.scrollHeight;
   };
 
-  recognition.onerror = (e) => {
-    console.error('Speech error', e.error);
+  r.onerror = (e) => {
+    dbg(`recognition.onerror: ${e.error} (message: ${e.message})`);
+    recognitionRunning = false;
     if (e.error === 'not-allowed') {
       showError('マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してください。');
       stopRecording();
     }
-    // no-speech, aborted, network etc: let onend handle restart
+    // other errors: let onend handle restart
   };
 
-  recognition.onend = () => {
-    console.log('recognition ended, isRecording=', isRecording);
+  r.onend = () => {
+    recognitionRunning = false;
+    dbg(`recognition.onend (isRecording=${isRecording})`);
     if (isRecording) {
-      // Restart after brief delay (iOS stops after each utterance)
+      // Recreate and restart (avoids stale state issues)
       setTimeout(() => {
-        if (isRecording) {
-          try {
-            recognition.start();
-            console.log('recognition restarted');
-          } catch(e) {
-            console.warn('restart failed, retry in 1s', e);
-            setTimeout(() => {
-              if (isRecording) try { recognition.start(); } catch(e2) {}
-            }, 1000);
-          }
+        if (!isRecording) return;
+        dbg('restarting recognition...');
+        recognition = createRecognition();
+        try {
+          recognition.start();
+        } catch(err) {
+          dbg(`restart failed: ${err.message}`);
         }
-      }, 250);
+      }, 300);
     }
   };
 
-  langSel.addEventListener('change', () => {
-    recognition.lang = langSel.value;
-    if (isRecording) {
-      recognition.stop(); // will auto-restart with new lang
-    }
-  });
+  return r;
 }
 
-// ─── iOS / mobile detection ───
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+langSel.addEventListener('change', () => {
+  dbg(`lang changed: ${langSel.value}`);
+  if (isRecording && recognition) {
+    try { recognition.abort(); } catch(e) {}
+    // onend will recreate with new lang
+  }
+});
 
-if (isIOS && recognition) {
-  // iOS Safari doesn't support continuous well
-  recognition.continuous = false;
-}
-
-// ─── Recording controls ───
+// ============================================================
+//  START / STOP
+// ============================================================
 async function startRecording() {
+  if (isRecording) return;
   isRecording = true;
+  dbg('startRecording()');
   micBtn.classList.add('recording');
   statusEl.textContent = '🔴 録音中…';
   document.getElementById('micLabel').textContent = 'TAP to STOP';
@@ -514,7 +366,20 @@ async function startRecording() {
   startTime = Date.now();
   timerInterval = setInterval(updateTimer, 1000);
 
-  // 1) Get mic stream FIRST for the audio visualizer
+  // 1) Start speech recognition FIRST (it uses its own mic internally)
+  recognition = createRecognition();
+  try {
+    recognition.start();
+    dbg('recognition.start() called');
+  } catch(e) {
+    dbg(`recognition.start() error: ${e.message}`);
+  }
+
+  // 2) Optionally get mic for visualizer (NOT required for speech recognition)
+  startVisualizer();
+}
+
+async function startVisualizer() {
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -523,40 +388,42 @@ async function startRecording() {
     analyser.fftSize = 256;
     source.connect(analyser);
     animate();
+    dbg('visualizer started');
   } catch(e) {
-    console.warn('Audio analyser failed', e);
-  }
-
-  // 2) Start speech recognition AFTER mic is acquired
-  try {
-    recognition.start();
-  } catch(e) {
-    console.warn('recognition.start failed', e);
+    dbg(`visualizer failed (ok, recognition still works): ${e.message}`);
   }
 }
 
 function stopRecording() {
+  if (!isRecording) return;
   isRecording = false;
+  dbg('stopRecording()');
   micBtn.classList.remove('recording');
   statusEl.textContent = '停止中';
   document.getElementById('micLabel').textContent = 'TAP to START';
   document.getElementById('micLabel').classList.remove('on');
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  try { recognition.stop(); } catch(e) {}
 
+  // Stop recognition
+  if (recognition) {
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
+  }
+
+  // Stop visualizer
   if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  if (audioCtx) { audioCtx.close().catch(()=>{}); audioCtx = null; }
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
   mouth.setAttribute('ry', '3');
   glow.classList.remove('active');
   setEmotion('neutral');
-
-  // Clear waveform
   const r = waveCanvas.parentElement.getBoundingClientRect();
   ctx.clearRect(0, 0, r.width, r.height);
 }
 
-// ─── Animation loop (mouth + waveform) ───
+// ============================================================
+//  ANIMATION (visualizer + mouth)
+// ============================================================
 function animate() {
   if (!analyser) return;
   const bufLen = analyser.frequencyBinCount;
@@ -565,120 +432,77 @@ function animate() {
   analyser.getByteFrequencyData(freqData);
   analyser.getByteTimeDomainData(timeData);
 
-  // Volume → mouth
   let sum = 0;
   for (let i = 0; i < bufLen; i++) sum += freqData[i];
   const avg = sum / bufLen;
-  const openness = Math.min(14, 3 + (avg / 255) * 30);
-  mouth.setAttribute('ry', openness.toFixed(1));
+  mouth.setAttribute('ry', Math.min(14, 3 + (avg / 255) * 30).toFixed(1));
+  glow.classList.toggle('active', avg > 15);
 
-  // Glow
-  if (avg > 15) { glow.classList.add('active'); }
-  else { glow.classList.remove('active'); }
-
-  // ─── Waveform drawing ───
   const rect = waveCanvas.parentElement.getBoundingClientRect();
   const w = rect.width, h = rect.height;
   ctx.clearRect(0, 0, w, h);
-
-  // Frequency bars
-  const barCount = 48;
-  const barW = w / barCount - 2;
-  const step = Math.floor(bufLen / barCount);
+  const barCount = 48, barW = w / barCount - 2, step = Math.floor(bufLen / barCount);
   for (let i = 0; i < barCount; i++) {
     const val = freqData[i * step] / 255;
     const barH = val * h * 0.85;
-    const x = i * (barW + 2) + 1;
-    const hue = 240 + val * 80; // blue → purple
-    ctx.fillStyle = `hsla(${hue}, 80%, 65%, ${0.4 + val * 0.5})`;
-    ctx.beginPath();
-    ctx.roundRect(x, h - barH, barW, barH, 3);
-    ctx.fill();
+    ctx.fillStyle = `hsla(${240 + val * 80}, 80%, 65%, ${0.4 + val * 0.5})`;
+    ctx.beginPath(); ctx.roundRect(i * (barW + 2) + 1, h - barH, barW, barH, 3); ctx.fill();
   }
-
-  // Waveform line
-  ctx.beginPath();
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
   const sliceW = w / bufLen;
   for (let i = 0; i < bufLen; i++) {
-    const v = timeData[i] / 128.0;
-    const y = (v * h) / 2;
-    if (i === 0) ctx.moveTo(0, y);
-    else ctx.lineTo(i * sliceW, y);
+    const y = (timeData[i] / 128.0 * h) / 2;
+    if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sliceW, y);
   }
   ctx.stroke();
-
   animFrame = requestAnimationFrame(animate);
 }
 
-// ─── Single-tap toggle (mobile-safe) ───
+// ============================================================
+//  TAP HANDLER (mobile-safe)
+// ============================================================
 let tapLock = false;
 function toggleRecording() {
   if (tapLock) return;
   tapLock = true;
   setTimeout(() => { tapLock = false; }, 500);
-
-  if (isRecording) stopRecording();
-  else startRecording();
+  dbg(`toggle: isRecording=${isRecording}`);
+  if (isRecording) stopRecording(); else startRecording();
 }
-
-// Use touchend on mobile, click on desktop — never both
 let usedTouch = false;
-micBtn.addEventListener('touchend', (e) => {
-  e.preventDefault();
-  usedTouch = true;
-  toggleRecording();
-}, { passive: false });
-micBtn.addEventListener('click', (e) => {
-  if (usedTouch) { usedTouch = false; return; }
-  toggleRecording();
-});
+micBtn.addEventListener('touchend', (e) => { e.preventDefault(); usedTouch = true; toggleRecording(); }, { passive: false });
+micBtn.addEventListener('click', (e) => { if (usedTouch) { usedTouch = false; return; } toggleRecording(); });
 micBtn.addEventListener('contextmenu', e => e.preventDefault());
 
-// ─── Action buttons ───
+// ============================================================
+//  ACTION BUTTONS
+// ============================================================
 document.getElementById('copyBtn').addEventListener('click', () => {
   const entries = transcript.querySelectorAll('.entry:not(.interim)');
   if (!entries.length) { toast('テキストがありません'); return; }
-  const text = Array.from(entries).map(e => {
-    const ts = e.querySelector('.ts').textContent;
-    const t = e.querySelector('.text').textContent;
-    return `[${ts}] ${t}`;
-  }).join('\n');
+  const text = Array.from(entries).map(e => `[${e.querySelector('.ts').textContent}] ${e.querySelector('.text').textContent}`).join('\n');
   navigator.clipboard.writeText(text).then(() => toast('📋 コピーしました'));
 });
-
 document.getElementById('dlBtn').addEventListener('click', () => {
   const entries = transcript.querySelectorAll('.entry:not(.interim)');
   if (!entries.length) { toast('テキストがありません'); return; }
-  const text = Array.from(entries).map(e => {
-    const ts = e.querySelector('.ts').textContent;
-    const t = e.querySelector('.text').textContent;
-    return `[${ts}] ${t}`;
-  }).join('\n');
+  const text = Array.from(entries).map(e => `[${e.querySelector('.ts').textContent}] ${e.querySelector('.text').textContent}`).join('\n');
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const now = new Date();
-  a.download = `transcript_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.txt`;
-  a.click();
-  toast('💾 ファイルを保存しました');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  a.download = `transcript_${d.getFullYear()}${(d.getMonth()+1).toString().padStart(2,'0')}${d.getDate().toString().padStart(2,'0')}_${d.getHours().toString().padStart(2,'0')}${d.getMinutes().toString().padStart(2,'0')}.txt`;
+  a.click(); toast('💾 保存しました');
 });
-
 document.getElementById('clearBtn').addEventListener('click', () => {
-  transcript.innerHTML = '';
-  totalChars = 0;
-  wordCountEl.textContent = '0 文字';
-  toast('🗑 クリアしました');
+  transcript.innerHTML = ''; totalChars = 0; wordCountEl.textContent = '0 文字'; toast('🗑 クリアしました');
 });
 
-// ─── Keyboard shortcut ───
+// Keyboard shortcut
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && e.target === document.body) {
-    e.preventDefault();
-    toggleRecording();
-  }
+  if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggleRecording(); }
 });
+
+dbg('App initialized');
 </script>
 </body>
 </html>
